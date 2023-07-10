@@ -1,0 +1,7 @@
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+out/
+venv/
