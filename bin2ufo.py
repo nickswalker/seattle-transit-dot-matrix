@@ -15,16 +15,18 @@ from fontmake.font_project import FontProject
 __version__ = "1.0.0"
 
 DOT_SCALE = 80
-RIGHT_MARGIN = 1
+RIGHT_BEARING = 1
 
 unicode_map = {
+    "bar": ord('|'),
     "colon": ord(':'),
     "lparen": ord('('),
     "rparen": ord(')'),
     "period": ord('.'),
     "slash": ord('/'),
     "space": ord(' '),
-    "hairspace": ord(' '),
+    "hairspace": int("200A", 16),
+    "thinspace": int("2009", 16),
     "comma": ord(',')}
 
 class AttrDict(dict):
@@ -65,12 +67,17 @@ def bin2glyph(binary_data, name, width=0, height=0, transform=None,
     If 'transform' is provided, apply a transformation matrix before the
     conversion (must be tuple of 6 floats, or a FontTools Transform object).
     """
-    glyph = DotOutline.fromdata(binary_data, transform=transform)
+    right_bearing = RIGHT_BEARING
+    if "space" in name:
+        right_bearing = 0
+    glyph = DotOutline.fromdata(binary_data, transform=transform, right_bearing=right_bearing)
     glyph.name = name
     if len(name) == 1:
         unicode = ord(name)
     elif len(name) == 2 and name[1] == "_":
         unicode = ord(name[0])
+    elif name[:2] == "U+":
+        unicode = int(name[2:], 16)
     else:
         unicode = unicode_map[name]
     glyph.unicodes = [unicode]
@@ -100,7 +107,7 @@ class DotOutline(object):
     or FontTools Transform object).
     """
 
-    def __init__(self, filename=None, transform=None):
+    def __init__(self, filename=None, transform=None, right_bearing=RIGHT_BEARING):
         if filename:
             with open(filename) as file_in:
                 lines = file_in.readlines()
@@ -108,28 +115,29 @@ class DotOutline(object):
             self.data = lines_to_data(lines)
         else:
             self.data = []
+        self.right_bearing = right_bearing
         self.transform = transform
 
     @classmethod
-    def fromstring(cls, data, transform=None):
-        self = cls(transform=transform)
+    def fromstring(cls, data, **kwargs):
+        self = cls(**kwargs)
         self.data = lines_to_data(data)
         return self
 
     @classmethod
-    def fromdata(cls, data, transform=None):
-        self = cls(transform=transform)
+    def fromdata(cls, data, **kwargs):
+        self = cls(**kwargs)
         self.data = data
         return self
 
 
     @property
     def width(self):
-        return (len(self.data[0]) + RIGHT_MARGIN) * DOT_SCALE
+        return (len(self.data[0]) + self.right_bearing) * DOT_SCALE
 
     @property
     def height(self):
-        return (len(self.data) + RIGHT_MARGIN) * DOT_SCALE
+        return (len(self.data) + self.right_bearing) * DOT_SCALE
 
     def draw(self, pen):
         d = .65
@@ -204,24 +212,46 @@ def parse_args(args):
 
 def load_from_txt(path):
     characters = {}
+    alternative_sets = defaultdict(dict)
     for filename in os.listdir(path):
         if not filename.endswith(".txt"):
+            print("Skipping", path)
             continue
         with open(f"{path}/{filename}") as fp:
             lines = fp.readlines()
         data = lines_to_data(map(str.strip, lines))
         if len(data) == 0:
+            print("Skipping", path)
             continue
-        characters[filename.split(".")[0]] = data
-    return characters
+        components = filename.split(".")
+        stylistic_set = None
+        if len(components) == 3:
+            character_name, stylistic_set, _ = components
+        elif len(components) == 2:
+            character_name, _ = components
+        else:
+            print("Skipping", path)
+            continue
+        if stylistic_set:
+            alternative_sets[stylistic_set][character_name] = data
+        else:
+            characters[character_name] = data
+
+    return characters, alternative_sets
 
 def create_ufo(name, path, character_data, format, info):
     writer = UFOWriter(f"{path}/{name}.ufo")
     glyphset = writer.getGlyphSet()
-
+    character_data, alternatives = character_data
     for character, data in character_data.items():
-        glif = bin2glyph(data, character,
-                         version=format)
+        try:
+            glif = bin2glyph(data, character,
+                             version=format)
+        except:
+            print("Skipping", character)
+            # TODO: Need to handle stylistic alternatives
+            # https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.c
+            continue
         glyphset.writeGlyph(character, glif, glif.drawPoints, format)
 
     glyphset.writeContents()
