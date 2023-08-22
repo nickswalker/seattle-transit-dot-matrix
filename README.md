@@ -1,36 +1,40 @@
-# Seattle Transit Dot Matrix Typeface
+# Seattle Transit Dot Matrix Typefaces
 
 A set of dot matrix fonts in the style of Sound Transit's displays. Inspired by [London TFL Dot Matrix Typeface](https://github.com/petykowski/London-Underground-Dot-Matrix-Typeface).
 
-## Seattle Transit 7
+Faithful to the original, but with some additional characters and stylistic alternates. Incomplete. Please contribute!
+
+<img src="https://raceconditionrunning.com/img/lrr23/lrr-og-banner.png" width="100%" alt="Light Rail Relay 2023">
+
+## Seattle Transit Dot Matrix 7
 
 Used for secondary text on station platform displays (Angle Lake to Westlake).
 
-## Seattle Transit 12
+## Seattle Transit Dot Matrix 10
 
-Used for Link Light Rail train interior displays.
+Arrival time boards at King County Metro and Sound Transit bus stations in Seattle Metro area.
 
-## Seattle Transit 15
+## Seattle Transit Dot Matrix 12
 
-Used on Link Light Rail station platforms (Angle Lake to Westlake). Upper and lower case.
+Used for Link Light Rail train interior displays on newer cars.
 
-## Seattle Transit 16
+## Seattle Transit Dot Matrix 15
 
-Used in Link Light Rail interior displays. Upper case only.
+Used on Link Light Rail station platforms (Angle Lake to Westlake). 2 dot weight. Upper and lower case.
 
-## Seattle Transit Headsign 16
+## Seattle Transit Dot Matrix 16
 
-Used in Link Light Rail headsigns. Upper case only.
+Used for Link Light Rail interior displays on older cars. 3 dot weight. Upper case only.
 
-## Contribute
+Doubt: `M`, `,`. Missing: `J`, `Q`.
 
-#### Build Additional Characters to Existing Typeface
+## Seattle Transit Dot Matrix Headsign 16
 
+Used in Link Light Rail headsigns. 3 dot weight. Upper case only.
 
-#### Generate Font
-1. File > Generate Fonts
-   - Maintain default export values
-2. Save into `font` directory of repo 
+## Development
+
+Characters are represented as ASCII art consisting of `1`s and `.`. File names indicate unicode code point, with an optional extra file extension indicating whether the character should be used in a stylistic alternative set. Add new characters using the [appropriate code points](https://unicode.org/charts/).
 
 ## License
 
